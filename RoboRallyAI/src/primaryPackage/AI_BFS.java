@@ -14,7 +14,7 @@ public class AI_BFS implements AI_Interface {
 	public AI_BFS(Board board) {
 		this.board = board;
 		// Initialize the first state.
-		createNewState();
+		createNewState("Start.");
 	}
 	
 	// Loads all robots into the board from a state.
@@ -26,7 +26,7 @@ public class AI_BFS implements AI_Interface {
 	}
 	
 	// Save state by saving all current robots on the board.
-	private void createNewState() {
+	private void createNewState(String command) {
 		AI_State state = new AI_State();
 		for (Robot robot : board.robots) {
 			Robot newRobot = new Robot();
@@ -35,6 +35,8 @@ public class AI_BFS implements AI_Interface {
 			newRobot.y = robot.y;
 			state.robots.add(newRobot);
 		}
+		state.commandline
+		state.commandline += command + "\n";
 		frontier.add(state);
 	}
 
@@ -49,7 +51,7 @@ public class AI_BFS implements AI_Interface {
 				loadState(currentState); // Load current state's robots into the board.
 				visited.add(currentState); // Visit current state.
 				if (board.checkGoal()) { // Let's see if we've found our goal.
-					return "Goal found!";
+					return "Goal found!\n" + currentState.commandline;
 				} else {
 					checkFrontier(currentState); // Visit all states from current state. This is a larger method.
 				}
@@ -67,18 +69,21 @@ public class AI_BFS implements AI_Interface {
 				switch (i) {
 				case 0:
 					board.moveRobot(robot.colour, "up");
+					createNewState(currentState.commandline + robot.colour + "up");
 					break;
 				case 1:
 					board.moveRobot(robot.colour, "down");
+					createNewState(currentState.commandline + robot.colour + "down");
 					break;
 				case 2:
 					board.moveRobot(robot.colour, "left");
+					createNewState(currentState.commandline + robot.colour + "left");
 					break;
 				case 3:
 					board.moveRobot(robot.colour, "right");
+					createNewState(currentState.commandline + robot.colour + "right");
 					break;
 				}
-				createNewState();
 			}
 		}
 	}
