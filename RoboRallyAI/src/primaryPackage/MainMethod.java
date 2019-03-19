@@ -14,6 +14,7 @@ public class MainMethod {
 		System.out.println("----------------------------------------------------------------------");
 		
 		AI_Interface ai = new AI_BFS(gameBoard);
+		System.out.println(ai.Search());
 
 	}
 

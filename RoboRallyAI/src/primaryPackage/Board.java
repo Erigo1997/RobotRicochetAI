@@ -162,4 +162,12 @@ public class Board {
 		}
 		return false;
 	}
+	
+	// Destroys all robots on the board right now.
+	public void clearRobots() {
+		for (Robot robot : robots) {
+			board[robot.y][robot.x].currentBot = null;
+		}
+		robots.clear();
+	}
 }

@@ -6,12 +6,25 @@ import java.util.Queue;
 public class AI_BFS implements AI_Interface {
 	
 	Queue<AI_State> queue = new ArrayDeque<AI_State> ();
+	Board board;
 	
+	// Create this algorithm class.
 	public AI_BFS(Board board) {
-		createNewState(board);
+		this.board = board;
+		createNewState();
 	}
 	
-	private void createNewState(Board board) {
+	// Pulls out the top of the state queue and initializes it into our board.
+	private void retrieveState() {
+		board.clearRobots();
+		AI_State state = queue.poll();
+		for (Robot robot : state.robots) {
+			board.createRobot(robot.colour, robot.x, robot.y);
+		}
+	}
+	
+	// Save state by saving all current robots on the board.
+	private void createNewState() {
 		AI_State state = new AI_State();
 		for (Robot robot : board.robots) {
 			Robot newRobot = new Robot();
@@ -23,6 +36,7 @@ public class AI_BFS implements AI_Interface {
 		queue.add(state);
 	}
 
+	// The great algorithm itself.
 	@Override
 	public String Search() {
 		
