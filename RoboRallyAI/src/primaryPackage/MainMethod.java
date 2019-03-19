@@ -13,7 +13,7 @@ public class MainMethod {
 		
 		System.out.println("----------------------------------------------------------------------");
 		
-		AI_BFS ai = new AI_BFS(gameBoard);
+		AI_Interface ai = new AI_BFS(gameBoard);
 
 	}
 
