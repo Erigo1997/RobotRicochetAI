@@ -35,7 +35,6 @@ public class AI_BFS implements AI_Interface {
 			newRobot.y = robot.y;
 			state.robots.add(newRobot);
 		}
-		state.commandline
 		state.commandline += command + "\n";
 		frontier.add(state);
 	}
@@ -43,11 +42,12 @@ public class AI_BFS implements AI_Interface {
 	// The great algorithm itself.
 	@Override
 	public String Search() {
+		int count = 0;
 		AI_State currentState = new AI_State();
 		// While we are not in a goal state, we keep searching.
 		while (frontier.peek() != null) {
-			if (!visited.contains(frontier.peek())) { // Make sure we haven't already visited this state.
-				currentState = frontier.poll(); // Poll top of queue.
+			currentState = frontier.poll(); // Poll top of queue.
+			if (!visitedContainsPeek(currentState)) { // Make sure we haven't already visited this state.
 				loadState(currentState); // Load current state's robots into the board.
 				visited.add(currentState); // Visit current state.
 				if (board.checkGoal()) { // Let's see if we've found our goal.
@@ -55,15 +55,25 @@ public class AI_BFS implements AI_Interface {
 				} else {
 					checkFrontier(currentState); // Visit all states from current state. This is a larger method.
 				}
+				// System.out.println("Checking new state "  + ++count); // TODO: Remove.
 			}
 		}
 		return "No goal could be found.";
 	}
 
+	private boolean visitedContainsPeek(AI_State currentState) {
+		for (AI_State state : visited) {
+			if (state.equals(currentState)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// Check all children states and add them to frontier.
 	private void checkFrontier(AI_State currentState) {
 		// For each robot, perform all movement
-		for (Robot robot : board.robots) {
+		for (Robot robot : currentState.robots) {
 			for (int i = 0; i < 4; i++) { // Four iterations - one per movement available.
 				loadState(currentState);
 				switch (i) {
