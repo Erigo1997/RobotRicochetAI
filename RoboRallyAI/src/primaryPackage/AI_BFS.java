@@ -9,10 +9,25 @@ public class AI_BFS implements AI_Interface {
 	Queue<AI_State> frontier = new ArrayDeque<AI_State> ();
 	ArrayList<AI_State> visited = new ArrayList<AI_State> ();
 	Board board;
+	String activeRobot;
+	int activeLayer;
 	
 	// Create this algorithm class.
 	public AI_BFS(Board board) {
 		this.board = board;
+		
+		// Pre-compute for purpose of prune-searching, attaching 0 to goal to start.
+		board.board[board.goaly][board.goalx].minimum = 0;
+		board.precompute(board.goaly, board.goalx);
+		
+		// We set active robot so we know what to look for.
+		activeRobot = board.activeRobot;
+		// Set the first active layer - how many steps at most active robot must make. Any states beyond this are culled.
+		if ((activeLayer = board.getMinimum(activeRobot)) == -1) {
+			System.out.println("Robot is not in a valid field.");
+			return;
+		}
+		
 		// Initialize the first state.
 		createNewState("Start.");
 	}
@@ -35,8 +50,12 @@ public class AI_BFS implements AI_Interface {
 			newRobot.y = robot.y;
 			state.robots.add(newRobot);
 		}
+		state.activeActions = activeLayer;
 		state.commandline += command + "\n";
-		frontier.add(state);
+		state.generateHash();
+		if (!visitedContains(state)) {
+			frontier.add(state);
+		}
 	}
 
 	// The great algorithm itself.
@@ -47,7 +66,8 @@ public class AI_BFS implements AI_Interface {
 		// While we are not in a goal state, we keep searching.
 		while (frontier.peek() != null) {
 			currentState = frontier.poll(); // Poll top of queue.
-			if (!visitedContainsPeek(currentState)) { // Make sure we haven't already visited this state.
+			System.out.println("Checking new state. Number: " + ++count + " frontier size: " + frontier.size() + " visited size: " + visited.size() + " ActiveLayer: " + activeLayer);
+			if (!visitedContains(currentState)) { // Make sure we haven't already visited this state and robot isn't in worse state.
 				loadState(currentState); // Load current state's robots into the board.
 				visited.add(currentState); // Visit current state.
 				if (board.checkGoal()) { // Let's see if we've found our goal.
@@ -61,7 +81,11 @@ public class AI_BFS implements AI_Interface {
 		return "No goal could be found.";
 	}
 
-	private boolean visitedContainsPeek(AI_State currentState) {
+	// Not only checks containment but also culls states that have worse active action layers..
+	private boolean visitedContains(AI_State currentState) {
+		if (currentState.activeActions > activeLayer) {
+			return true;
+		}
 		for (AI_State state : visited) {
 			if (state.equals(currentState)) {
 				return true;
@@ -76,25 +100,72 @@ public class AI_BFS implements AI_Interface {
 		for (Robot robot : currentState.robots) {
 			for (int i = 0; i < 4; i++) { // Four iterations - one per movement available.
 				loadState(currentState);
-				switch (i) {
-				case 0:
-					board.moveRobot(robot.colour, "up");
-					createNewState(currentState.commandline + robot.colour + "up");
-					break;
-				case 1:
-					board.moveRobot(robot.colour, "down");
-					createNewState(currentState.commandline + robot.colour + "down");
-					break;
-				case 2:
-					board.moveRobot(robot.colour, "left");
-					createNewState(currentState.commandline + robot.colour + "left");
-					break;
-				case 3:
-					board.moveRobot(robot.colour, "right");
-					createNewState(currentState.commandline + robot.colour + "right");
-					break;
+				/* Now we will make use of our precomputation heuristics. If the current robot is the active robot, we will ONLY move it to the suggest spot
+				 * if we see that the moves it has made to get there are less than the layer of that spot. This culls a lot of states.
+				 */
+				if (robot.colour.equals(activeRobot)) {
+					moveActiveRobot(currentState, robot, i);
+				} else {
+					moveInactiveRobot(currentState, robot, i);
 				}
 			}
+		}
+	}
+
+	private void moveActiveRobot(AI_State currentState, Robot robot, int i) {
+		switch (i) {
+		case 0:
+			board.moveRobot(robot.colour, "up");
+			if (board.getMinimum(robot.colour) < activeLayer) {
+				activeLayer = board.getMinimum(robot.colour);
+				createNewState(currentState.commandline + robot.colour + "up");
+			}
+			break;
+		case 1:
+			board.moveRobot(robot.colour, "down");
+			if (board.getMinimum(robot.colour) < activeLayer) {
+				activeLayer = board.getMinimum(robot.colour);
+				createNewState(currentState.commandline + robot.colour + "down");
+			}
+			break;
+		case 2:
+			board.moveRobot(robot.colour, "left");
+			if (board.getMinimum(robot.colour) < activeLayer) {
+				activeLayer = board.getMinimum(robot.colour);
+				createNewState(currentState.commandline + robot.colour + "left");
+			}
+			break;
+		case 3:
+			board.moveRobot(robot.colour, "right");
+			if (board.getMinimum(robot.colour) < activeLayer) {
+				activeLayer = board.getMinimum(robot.colour);
+				createNewState(currentState.commandline + robot.colour + "right");
+			}
+			break;
+		}
+	}
+
+	private void moveInactiveRobot(AI_State currentState, Robot robot, int i) {
+		switch (i) {
+		/* Now we will make use of our precomputation heuristics. If the current robot is the active robot, we will ONLY move it to the suggest spot
+		 * if we see that the moves it has made to get there are less than the layer of that spot. This culls a lot of states.
+		 */
+		case 0:
+			board.moveRobot(robot.colour, "up");
+			createNewState(currentState.commandline + robot.colour + "up");
+			break;
+		case 1:
+			board.moveRobot(robot.colour, "down");
+			createNewState(currentState.commandline + robot.colour + "down");
+			break;
+		case 2:
+			board.moveRobot(robot.colour, "left");
+			createNewState(currentState.commandline + robot.colour + "left");
+			break;
+		case 3:
+			board.moveRobot(robot.colour, "right");
+			createNewState(currentState.commandline + robot.colour + "right");
+			break;
 		}
 	}
 }

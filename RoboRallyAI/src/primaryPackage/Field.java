@@ -9,6 +9,9 @@ public class Field {
 	public Field rightField;
 	public Field downField;
 	public Robot currentBot;
+	
+	// The number of squares this field is from the goal, assuming active robot can stop anytime. Here for prune search algorithm.
+	public int minimum = -1;
 
 	public int fieldId;
 	public String goal;
@@ -21,9 +24,17 @@ public class Field {
 		} else if (currentBot != null) {
 			output += currentBot.colour;
 		} else {
-			output += "E";
+			output += minimum;
 		}
-		return " [" + output + "]\t";
+		output = "[" + output + "]";
+		/* Shitty attempt at visualising walls.
+		if (leftField == null) {
+			output = "|" + output;
+		}
+		if (rightField == null) {
+			output = output + "|";
+		} */
+		return output + "\t";
 	}
 
 }
